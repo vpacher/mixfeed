@@ -1,0 +1,19 @@
+[Unit]
+Description=Mixfeed receiver (NDI to the PipeWire source "Mixfeed Mic" and the camera "Mixfeed")
+After=pipewire.service
+Wants=pipewire.service
+# The camera (v4l2loopback, exclusive_caps=1) announces itself as a capture
+# device only after mixfeedd wrote its first frame. WirePlumber makes camera
+# nodes when it starts, so it has to start after that (Type=notify below).
+Before=wireplumber.service
+
+[Service]
+Type=notify
+# Caps how long a hanging start can hold up WirePlumber (and with it audio).
+TimeoutStartSec=10
+ExecStart=%h/.local/bin/mixfeedd
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=default.target

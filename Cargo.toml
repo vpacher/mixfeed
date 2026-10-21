@@ -1,0 +1,18 @@
+[workspace]
+resolver = "3"
+members = [
+    "crates/mixfeed-audio",
+    "crates/mixfeed-cam",
+    "crates/mixfeed-core",
+    "crates/mixfeed-ctl",
+    "crates/mixfeed-ndi",
+    "linux/mixfeedd",
+    "tools/mfcamrx",
+    "tools/mfplay",
+    "tools/mfrx",
+]
+
+[workspace.package]
+edition = "2024"
+license = "MIT OR Apache-2.0"
+publish = false
