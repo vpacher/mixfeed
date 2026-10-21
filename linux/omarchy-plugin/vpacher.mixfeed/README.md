@@ -75,4 +75,4 @@ Report vulnerabilities privately; see [SECURITY.md of Mixfeed](https://github.co
 
 ## Licence
 
-MIT or Apache-2.0, at your choice. See `LICENSE-MIT` and `LICENSE-APACHE`.
+MIT or Apache-2.0, at your choice. See `LICENSE`, `LICENSE-MIT` and `LICENSE-APACHE`.
