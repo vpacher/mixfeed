@@ -120,6 +120,8 @@ The script stops and removes the service, the programs and the bar widget. Your 
 
 Click the Mixfeed icon in the bar to open the panel.
 
+<img src="linux/omarchy-plugin/vpacher.mixfeed/preview.png" alt="Mixfeed panel while an application uses the microphone and the camera" width="380">
+
 | Section | Content |
 |---|---|
 | Mixfeed Mic | state of the microphone and the camera, buffer, sender clock, underruns |

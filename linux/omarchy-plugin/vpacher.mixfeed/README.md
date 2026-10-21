@@ -6,6 +6,10 @@ The widget shows the state of the microphone and the camera, and lights up while
 
 NDI® is a registered trademark of Vizrt NDI AB. Mixfeed is not a product of NDI and is not affiliated with NDI.
 
+| On air | Ready |
+|---|---|
+| ![Mixfeed panel while an application uses the microphone and the camera](preview.png) | ![Mixfeed panel with no application on the microphone or the camera](ready.png) |
+
 ## Requirements
 
 The widget is the control for the Mixfeed service `mixfeedd`. It does not receive NDI itself. Without `mixfeedd` it shows "mixfeedd not running" and a link to the install.
