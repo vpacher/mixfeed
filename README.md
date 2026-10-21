@@ -80,7 +80,7 @@ Tested with: Omarchy 4.0 (Arch Linux, x86_64), PipeWire 1.6, NDI runtime 6.3, Ch
    - checks the requirements and stops with a hint if one is missing,
    - builds `mixfeedd` and `mfctl` and installs them in `~/.local/bin`,
    - installs and starts the systemd user service `mixfeedd`,
-   - on Omarchy, installs the bar widget and adds it to the right side of the bar.
+   - on Omarchy, installs the bar widget from [omarchy-mixfeed](https://github.com/vpacher/omarchy-mixfeed) (a git checkout, so `omarchy plugin update` updates it; without network, the copy in this repository) and adds it to the right side of the bar.
 
    It warns about optional parts that are missing (camera, monitor, FFmpeg 7). It does not use `sudo`.
 

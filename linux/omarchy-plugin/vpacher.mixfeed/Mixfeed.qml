@@ -86,7 +86,7 @@ Panel {
   }
 
   function tooltipBase() {
-    if (!daemonUp) return "Mixfeed: mixfeedd not running"
+    if (!daemonUp) return "Mixfeed: mixfeedd not running (install: github.com/vpacher/mixfeed)"
     if (onAir) return "Mixfeed: live (" + [micOnAir ? "microphone" : "", cameraLive ? "camera" : ""].filter(function(s) { return s }).join(", ") + ")"
       + (cameraLive && camera.source_width ? " · camera source " + cameraSourceDetail() : "")
     if (rxState === "connected") return "Mixfeed: " + stateText() + " " + status.source
@@ -315,6 +315,32 @@ Panel {
               font.letterSpacing: 1.2
               elide: Text.ElideRight
               width: parent.width
+            }
+          }
+        }
+
+        // ---------- Without the daemon (for example installed from the marketplace only) ----------
+        Column {
+          visible: !root.daemonUp
+          width: parent.width
+          spacing: Style.space(4)
+
+          InfoLabel {
+            width: parent.width
+            wrapMode: Text.WordWrap
+            text: "The widget needs the mixfeedd service. If it is not installed, install Mixfeed with linux/install.sh from:"
+          }
+
+          InfoValue {
+            text: "github.com/vpacher/mixfeed"
+            font.underline: installLink.containsMouse
+
+            MouseArea {
+              id: installLink
+              anchors.fill: parent
+              hoverEnabled: true
+              cursorShape: Qt.PointingHandCursor
+              onClicked: Qt.openUrlExternally("https://github.com/vpacher/mixfeed")
             }
           }
         }

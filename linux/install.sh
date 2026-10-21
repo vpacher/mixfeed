@@ -175,28 +175,60 @@ if [ -e "$camera_dev" ] && have pw-cli && systemctl --user is-active --quiet wir
 fi
 
 # ---------- Omarchy bar widget ----------
+# The widget is its own repository (Omarchy plugins are git repositories with
+# manifest.json at the root): "omarchy plugin add" makes a git checkout, and
+# "omarchy plugin update" keeps it current. Without network or without a
+# running shell, the copy in this repository is installed instead.
 [ -d "$HOME/.config/omarchy" ] || exit 0
+widget_repo=https://github.com/vpacher/omarchy-mixfeed.git
 src=linux/omarchy-plugin/$plugin_id
-if diff -rq "$src" "$plugin" >/dev/null 2>&1; then
-    echo "bar widget unchanged"
+changed=yes
+
+install_local_copy() {
+    if diff -rq "$src" "$plugin" >/dev/null 2>&1; then
+        changed=
+        return
+    fi
+    # Copy into a hidden folder and move it in at once: the shell reloads a
+    # plugin on every file change it sees.
+    stage="$HOME/.config/omarchy/plugins/.$plugin_id.new"
+    rm -rf "$stage"
+    install -Dm644 -t "$stage" "$src"/*
+    rm -rf "$plugin"
+    mv "$stage" "$plugin"
+}
+
+if ! have_omarchy_shell; then
+    install_local_copy
+    echo "bar widget installed from this repository; enable it with: omarchy plugin enable $plugin_id"
     exit 0
 fi
-# Copy into a hidden folder and move it in at once: the shell reloads a plugin
-# on every file change it sees.
-stage="$HOME/.config/omarchy/plugins/.$plugin_id.new"
-rm -rf "$stage"
-install -Dm644 -t "$stage" "$src"/*
-rm -rf "$plugin"
-mv "$stage" "$plugin"
-if ! have_omarchy_shell; then
-    echo "bar widget installed; enable it with: omarchy plugin enable $plugin_id"
-    exit 0
+if [ -d "$plugin/.git" ]; then
+    out=$(omarchy plugin update "$plugin_id" --yes 2>&1) || warn "widget update failed: $out"
+    case "$out" in *"is up to date"*) changed= ;; esac
+else
+    # Not installed, or a copy from an earlier install.sh: replace it with a checkout.
+    old="$HOME/.config/omarchy/plugins/.$plugin_id.old"
+    rm -rf "$old"
+    [ ! -e "$plugin" ] || mv "$plugin" "$old"
+    if omarchy plugin add "$widget_repo" --yes >/dev/null 2>&1; then
+        rm -rf "$old"
+        echo "bar widget installed from $widget_repo"
+    else
+        warn "could not get the widget from $widget_repo; installing the copy from this repository"
+        [ ! -e "$old" ] || mv "$old" "$plugin"
+        install_local_copy
+    fi
 fi
 omarchy-shell shell rescanPlugins >/dev/null 2>&1 || true
 if ! grep -q "\"$plugin_id\"" "$HOME/.config/omarchy/shell.json" 2>/dev/null; then
     omarchy plugin enable "$plugin_id" --section right --after omarchy.microphone >/dev/null 2>&1 ||
         omarchy plugin enable "$plugin_id" --section right >/dev/null ||
         warn "could not add the widget to the bar: omarchy plugin enable $plugin_id"
+fi
+if [ -z "$changed" ]; then
+    echo "bar widget unchanged"
+    exit 0
 fi
 # A hot reload does not always take a changed widget (old QML, or a widget that
 # does not open). A restart does; only from a terminal, where the screen is not locked.
