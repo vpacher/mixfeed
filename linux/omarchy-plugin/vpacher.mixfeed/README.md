@@ -22,15 +22,7 @@ The widget is the control for the Mixfeed service `mixfeedd`. It does not receiv
 
 ## Install
 
-Install Mixfeed. Its install script also installs and enables this widget:
-
-```sh
-git clone https://github.com/vpacher/mixfeed.git
-cd mixfeed
-linux/install.sh
-```
-
-The Mixfeed README has the full procedure (requirements, camera, firewall).
+Install Mixfeed with the procedure in its README: [Mixfeed, section 3 "Install"](https://github.com/vpacher/mixfeed#3-install) (requirements, camera, firewall). The Mixfeed install script also installs and enables this widget.
 
 If Mixfeed is installed already, you can add the widget alone:
 
@@ -54,12 +46,7 @@ Remove the widget only:
 omarchy plugin remove vpacher.mixfeed
 ```
 
-Remove Mixfeed with the widget:
-
-```sh
-cd mixfeed
-linux/install.sh remove
-```
+To remove Mixfeed with the widget, see [Mixfeed, section 3 "Remove"](https://github.com/vpacher/mixfeed#remove).
 
 ## Use
 
