@@ -180,6 +180,11 @@ fi
 # "omarchy plugin update" keeps it current. Without network or without a
 # running shell, the copy in this repository is installed instead.
 [ -d "$HOME/.config/omarchy" ] || exit 0
+# Omarchy's commands need OMARCHY_PATH; its login shells set it, a plain
+# shell (ssh, scripts) does not.
+if [ -z "${OMARCHY_PATH:-}" ] && [ -d /usr/share/omarchy ]; then
+    export OMARCHY_PATH=/usr/share/omarchy
+fi
 widget_repo=https://github.com/vpacher/omarchy-mixfeed.git
 src=linux/omarchy-plugin/$plugin_id
 changed=yes
@@ -216,6 +221,8 @@ else
         echo "bar widget installed from $widget_repo"
     else
         warn "could not get the widget from $widget_repo; installing the copy from this repository"
+        # "plugin add" can fail after the clone (for example the rescan).
+        rm -rf "$plugin"
         [ ! -e "$old" ] || mv "$old" "$plugin"
         install_local_copy
     fi
