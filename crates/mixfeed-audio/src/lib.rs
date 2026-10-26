@@ -198,6 +198,27 @@ impl Peak {
 }
 /// Names of the sources the browse thread sees.
 static SOURCES: Mutex<Vec<String>> = Mutex::new(Vec::new());
+/// Any host on the network can announce sources: the list that goes to the
+/// clients (control socket, widget, menu) has a fixed upper size.
+const MAX_SOURCES: usize = 64;
+/// NDI names are "HOST (Source)"; a longer name is skipped, not cut, because a
+/// cut name does not select its source.
+const MAX_SOURCE_NAME: usize = 256;
+
+/// The first [`MAX_SOURCES`] names of at most [`MAX_SOURCE_NAME`] bytes, and the
+/// number of names left out.
+fn bounded_sources(names: impl IntoIterator<Item = String>) -> (Vec<String>, usize) {
+    let mut kept = Vec::new();
+    let mut left_out = 0;
+    for n in names {
+        if kept.len() < MAX_SOURCES && n.len() <= MAX_SOURCE_NAME {
+            kept.push(n);
+        } else {
+            left_out += 1;
+        }
+    }
+    (kept, left_out)
+}
 /// The browse thread stops after this time.
 static BROWSE_UNTIL: Mutex<Option<Instant>> = Mutex::new(None);
 static BROWSE_ALIVE: AtomicBool = AtomicBool::new(false);
@@ -504,9 +525,12 @@ fn browse() {
             continue;
         }
         first = false;
-        let names: Vec<String> = finder.sources().into_iter().map(|s| s.name).collect();
+        let (names, left_out) = bounded_sources(finder.sources().into_iter().map(|s| s.name));
         let mut cur = lock(&SOURCES);
         if *cur != names {
+            if left_out > 0 {
+                log(&format!("browse: {left_out} sources left out (more than {MAX_SOURCES}, or name longer than {MAX_SOURCE_NAME} bytes)"));
+            }
             *cur = names;
             drop(cur);
             changed(Change::Sources);
@@ -843,5 +867,15 @@ mod tests {
         assert_eq!(s.text, "error: NDI receiver not responding");
         RX_ALIVE.store(false, Ordering::SeqCst);
         assert_eq!(status().state, Kind::Connected);
+    }
+
+    #[test]
+    fn source_list_has_an_upper_size() {
+        let long = "H (".to_string() + &"x".repeat(MAX_SOURCE_NAME) + ")";
+        let names = (0..MAX_SOURCES + 5).map(|i| format!("HOST (S{i})"));
+        let (kept, left_out) = bounded_sources(std::iter::once(long).chain(names));
+        assert_eq!(kept.len(), MAX_SOURCES);
+        assert_eq!(kept[0], "HOST (S0)");
+        assert_eq!(left_out, 6);
     }
 }

@@ -68,19 +68,22 @@ Tested with: Omarchy 4.0 (Arch Linux, x86_64), PipeWire 1.6, NDI runtime 6.3, Ch
    sudo modprobe v4l2loopback
    ```
 
-4. Get Mixfeed and install it:
+4. Get Mixfeed release v0.1.2 (a fixed release, not the moving branch) and install it:
 
    ```sh
    git clone https://github.com/vpacher/mixfeed.git
    cd mixfeed
+   git checkout --detach v0.1.2
    linux/install.sh
    ```
+
+   On Omarchy with the bar widget: use the procedure in the [widget README](https://github.com/vpacher/omarchy-mixfeed#install). It installs the exact Mixfeed commit that the widget release was tested with.
 
    The script:
    - checks the requirements and stops with a hint if one is missing,
    - builds `mixfeedd` and `mfctl` and installs them in `~/.local/bin`,
    - installs and starts the systemd user service `mixfeedd`,
-   - on Omarchy, installs the bar widget from [omarchy-mixfeed](https://github.com/vpacher/omarchy-mixfeed) (a git checkout, so `omarchy plugin update` updates it; without network, the copy in this repository) and adds it to the right side of the bar.
+   - does not install or change the Omarchy bar widget. The widget is a separate plugin ([omarchy-mixfeed](https://github.com/vpacher/omarchy-mixfeed), also in the Omarchy plugin marketplace).
 
    It warns about optional parts that are missing (camera, monitor, FFmpeg 7). It does not use `sudo`.
 
@@ -98,11 +101,16 @@ Tested with: Omarchy 4.0 (Arch Linux, x86_64), PipeWire 1.6, NDI runtime 6.3, Ch
 
 ### Update
 
+Replace `v<new release>` with the release you want:
+
 ```sh
 cd mixfeed
-git pull
+git fetch --tags origin
+git checkout --detach v<new release>
 linux/install.sh
 ```
+
+With the bar widget, use the update procedure in the [widget README](https://github.com/vpacher/omarchy-mixfeed#update).
 
 Settings stay.
 
@@ -112,7 +120,7 @@ Settings stay.
 linux/install.sh remove
 ```
 
-The script stops and removes the service, the programs and the bar widget. Your settings stay in `~/.config/mixfeed`. To remove the camera module configuration, delete `/etc/modules-load.d/v4l2loopback.conf` and `/etc/modprobe.d/v4l2loopback.conf`.
+The script stops and removes the service and the programs. To remove the bar widget: `omarchy plugin remove vpacher.mixfeed`. Your settings stay in `~/.config/mixfeed`. To remove the camera module configuration, delete `/etc/modules-load.d/v4l2loopback.conf` and `/etc/modprobe.d/v4l2loopback.conf`.
 
 ## 4. Use
 

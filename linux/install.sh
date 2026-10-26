@@ -1,7 +1,7 @@
 #!/bin/sh
-# Build and install mixfeedd and mfctl (~/.local/bin), the systemd user unit and,
-# on Omarchy, the bar widget (~/.config/omarchy/plugins/vpacher.mixfeed).
+# Build and install mixfeedd and mfctl (~/.local/bin) and the systemd user unit.
 # With "remove": stop and uninstall (settings in ~/.config/mixfeed stay).
+# The Omarchy bar widget is a separate plugin; this script does not change it.
 #
 # Checks first: a missing requirement stops the install with a hint, a missing
 # optional part (camera, monitor) gives a warning.
@@ -33,21 +33,14 @@ have() {
 root_only() {
     [ "$(stat -c %u "$1")" = 0 ] && [ -z "$(find "$1" -maxdepth 0 -perm /022)" ]
 }
-# The omarchy CLI talks to the running shell over IPC.
-have_omarchy_shell() {
-    [ -d "$HOME/.config/omarchy" ] && have omarchy && pgrep -x quickshell >/dev/null 2>&1
-}
 
 if [ "${1:-}" = remove ]; then
     systemctl --user disable --now mixfeedd.service 2>/dev/null || true
     rm -f "$unit" "$ffmpeg_dropin" "$HOME/.local/bin/mixfeedd" "$HOME/.local/bin/mfctl"
     rmdir "$unit.d" 2>/dev/null || true
-    if have_omarchy_shell; then
-        omarchy plugin disable "$plugin_id" >/dev/null 2>&1 || true
-    fi
-    rm -rf "$plugin"
     systemctl --user daemon-reload
     echo "removed"
+    [ ! -e "$plugin" ] || echo "the bar widget stays; to remove it: omarchy plugin remove $plugin_id"
     exit 0
 fi
 
@@ -175,73 +168,10 @@ if [ -e "$camera_dev" ] && have pw-cli && systemctl --user is-active --quiet wir
 fi
 
 # ---------- Omarchy bar widget ----------
-# The widget is its own repository (Omarchy plugins are git repositories with
-# manifest.json at the root): "omarchy plugin add" makes a git checkout, and
-# "omarchy plugin update" keeps it current. Without network or without a
-# running shell, the copy in this repository is installed instead.
-[ -d "$HOME/.config/omarchy" ] || exit 0
-# Omarchy's commands need OMARCHY_PATH; its login shells set it, a plain
-# shell (ssh, scripts) does not.
-if [ -z "${OMARCHY_PATH:-}" ] && [ -d /usr/share/omarchy ]; then
-    export OMARCHY_PATH=/usr/share/omarchy
-fi
-widget_repo=https://github.com/vpacher/omarchy-mixfeed.git
-src=linux/omarchy-plugin/$plugin_id
-changed=yes
-
-install_local_copy() {
-    if diff -rq "$src" "$plugin" >/dev/null 2>&1; then
-        changed=
-        return
-    fi
-    # Copy into a hidden folder and move it in at once: the shell reloads a
-    # plugin on every file change it sees.
-    stage="$HOME/.config/omarchy/plugins/.$plugin_id.new"
-    rm -rf "$stage"
-    install -Dm644 -t "$stage" "$src"/*
-    rm -rf "$plugin"
-    mv "$stage" "$plugin"
-}
-
-if ! have_omarchy_shell; then
-    install_local_copy
-    echo "bar widget installed from this repository; enable it with: omarchy plugin enable $plugin_id"
-    exit 0
-fi
-if [ -d "$plugin/.git" ]; then
-    out=$(omarchy plugin update "$plugin_id" --yes 2>&1) || warn "widget update failed: $out"
-    case "$out" in *"is up to date"*) changed= ;; esac
-else
-    # Not installed, or a copy from an earlier install.sh: replace it with a checkout.
-    old="$HOME/.config/omarchy/plugins/.$plugin_id.old"
-    rm -rf "$old"
-    [ ! -e "$plugin" ] || mv "$plugin" "$old"
-    if omarchy plugin add "$widget_repo" --yes >/dev/null 2>&1; then
-        rm -rf "$old"
-        echo "bar widget installed from $widget_repo"
-    else
-        warn "could not get the widget from $widget_repo; installing the copy from this repository"
-        # "plugin add" can fail after the clone (for example the rescan).
-        rm -rf "$plugin"
-        [ ! -e "$old" ] || mv "$old" "$plugin"
-        install_local_copy
-    fi
-fi
-omarchy-shell shell rescanPlugins >/dev/null 2>&1 || true
-if ! grep -q "\"$plugin_id\"" "$HOME/.config/omarchy/shell.json" 2>/dev/null; then
-    omarchy plugin enable "$plugin_id" --section right --after omarchy.microphone >/dev/null 2>&1 ||
-        omarchy plugin enable "$plugin_id" --section right >/dev/null ||
-        warn "could not add the widget to the bar: omarchy plugin enable $plugin_id"
-fi
-if [ -z "$changed" ]; then
-    echo "bar widget unchanged"
-    exit 0
-fi
-# A hot reload does not always take a changed widget (old QML, or a widget that
-# does not open). A restart does; only from a terminal, where the screen is not locked.
-if [ -t 0 ] && [ -t 1 ] && have omarchy-restart-shell; then
-    omarchy-restart-shell >/dev/null 2>&1 &
-    echo "bar widget updated; shell restarted"
-else
-    echo "bar widget updated; if it looks old or does not open, run: omarchy-restart-shell"
+# The widget is a separate Omarchy plugin (repository omarchy-mixfeed, in the
+# plugin marketplace). This script does not install, update or remove it:
+# the user adds it, and only "omarchy plugin" changes it.
+if [ -d "$HOME/.config/omarchy" ] && [ ! -e "$plugin" ]; then
+    echo "Omarchy bar widget: add Mixfeed from the Omarchy plugin marketplace, or run:"
+    echo "  omarchy plugin add https://github.com/vpacher/omarchy-mixfeed.git --enable"
 fi
