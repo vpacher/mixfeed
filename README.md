@@ -1,6 +1,6 @@
 # Mixfeed
 
-Mixfeed receives an [NDI®](https://ndi.video/) source on Linux and gives it to your applications as a microphone and a webcam. Use it to bring the program output of a video mixer (for example OBS with DistroAV, vMix, a hardware mixer or an NDI converter) into a video call, a browser or a recording application.
+Mixfeed receives an [NDI®](https://ndi.video/) source on Linux and gives it to your applications as a virtual webcam and microphone. Use it to bring the program output of a video mixer (for example OBS with DistroAV, vMix, a hardware mixer or an NDI converter) into a video call, a browser or a recording application.
 
 Mixfeed runs as a small user service. A bar widget for Omarchy controls it.
 
@@ -68,12 +68,12 @@ Tested with: Omarchy 4.0 (Arch Linux, x86_64), PipeWire 1.6, NDI runtime 6.3, Ch
    sudo modprobe v4l2loopback
    ```
 
-4. Get Mixfeed release v0.1.2 (a fixed release, not the moving branch) and install it:
+4. Get Mixfeed release v0.1.3 (a fixed release, not the moving branch) and install it:
 
    ```sh
    git clone https://github.com/vpacher/mixfeed.git
    cd mixfeed
-   git checkout --detach v0.1.2
+   git checkout --detach v0.1.3
    linux/install.sh
    ```
 
